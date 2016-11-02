@@ -117,7 +117,6 @@ void IndexTransformFeedbackApp::initBuffers()
 	for( int i = 0; i < POINT_NUM; i++ ){
 		vec4 pos = vec4( randFloat( -0.5, 0.5 ) * getWindowWidth(), randFloat( -0.5, 0.5) * getWindowHeight(), randFloat( -0.5, 0.5) * 500, 1 );
 		positions.push_back( pos );
-		CI_LOG_V( i << " | " << pos );
 	}
 	
 	
@@ -129,11 +128,9 @@ void IndexTransformFeedbackApp::initBuffers()
 		
 		for( int j = 0; j < POINT_NUM; j++){
 			vec4 pt2 = positions[j];
-//			CI_LOG_V( distance( pt1, pt2 ) );
 			if( pt1 != pt2 && distance( pt1, pt2 ) < MAX_DIST ){
 				lineIndices[index] = i;
 				lineIndices[index+1] = j;
-				CI_LOG_V( "connect: " << i << " TO " << j );
 			}
 			index += 2;
 		}

@@ -13,7 +13,7 @@ uniform samplerBuffer tex_position;
 uniform float ciElapsedSeconds;
 
 // The outputs of the vertex shader are the same as the inputs
-out int tf_index;
+out uint tf_index;
 
 
 void main(void)
@@ -21,6 +21,7 @@ void main(void)
 	int matchIndex = -1;
 	int id = int(floor(float(vIndex) / float(uStride)));
 	bool even = mod(id, 2) == 0;
+	
 	/*
 	if( vIndex > 0 ){
 		if( even ){
@@ -53,8 +54,9 @@ void main(void)
 	
 	// debug output
 	if( even )
-		tf_index = 0;
+		tf_index = uint(0);
 	else
-		tf_index = 100;
+		tf_index = uint(100);
 	
+	tf_index = uint(0);
 }
