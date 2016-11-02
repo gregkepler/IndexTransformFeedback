@@ -9,10 +9,11 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-const int POINT_NUM			= 100;
+const int POINT_NUM					= 100;
 const uint32_t POSITION_INDEX		= 1;
-const uint32_t VELOCITY_INDEX			= 2;
+const uint32_t VELOCITY_INDEX		= 2;
 const uint32_t LINE_INDEX			= 3;
+const float MAX_DIST				= 150.0f;
 
 class IndexTransformFeedbackApp : public App {
   public:
@@ -76,7 +77,7 @@ void IndexTransformFeedbackApp::initGlsl()
 		mLineUpdateGlsl = gl::GlslProg::create( updateFmt );
 		mLineUpdateGlsl->uniform( "uParticleCount", POINT_NUM );
 		mLineUpdateGlsl->uniform( "uStride", POINT_NUM );
-		mLineUpdateGlsl->uniform( "uMaxDist", 200.0f );
+		mLineUpdateGlsl->uniform( "uMaxDist", MAX_DIST );
 		
 	}
 	
@@ -114,18 +115,22 @@ void IndexTransformFeedbackApp::initBuffers()
 {
 	vector<vec4> positions;
 	for( int i = 0; i < POINT_NUM; i++ ){
-		positions.push_back( vec4( randFloat( -0.5, 0.5 ) * getWindowWidth(), randFloat( -0.5, 0.5) * getWindowHeight(), randFloat( -0.5, 0.5) * 500, 1 ) );
+		vec4 pos = vec4( randFloat( -0.5, 0.5 ) * getWindowWidth(), randFloat( -0.5, 0.5) * getWindowHeight(), randFloat( -0.5, 0.5) * 500, 1 );
+		positions.push_back( pos );
+		CI_LOG_V( i << " | " << pos );
 	}
 	
+	
 	int lineCount = POINT_NUM * POINT_NUM * 2;
-	vector<int> lineIndices( lineCount, -1 );
+	vector<uint32_t> lineIndices( lineCount, 0 );
 	int index = 0;
 	for( int i = 0; i < POINT_NUM; i++ ){
+		vec4 pt1 = positions[i];
+		
 		for( int j = 0; j < POINT_NUM; j++){
-			vec4 pt1 = positions[i];
 			vec4 pt2 = positions[j];
-			
-			if( pt1 != pt2 && distance( pt1, pt2 ) < 100.0f ){
+//			CI_LOG_V( distance( pt1, pt2 ) );
+			if( pt1 != pt2 && distance( pt1, pt2 ) < MAX_DIST ){
 				lineIndices[index] = i;
 				lineIndices[index+1] = j;
 				CI_LOG_V( "connect: " << i << " TO " << j );
@@ -144,9 +149,9 @@ void IndexTransformFeedbackApp::initBuffers()
 	
 	
 	// Create Position Vbo with the initial position data
-	mPositions[mSourceIndex] = ci::gl::Vbo::create( GL_ARRAY_BUFFER, positions.size() * sizeof(vec3), positions.data(), GL_STATIC_DRAW );
+	mPositions[mSourceIndex] = ci::gl::Vbo::create( GL_ARRAY_BUFFER, positions.size() * sizeof(vec4), positions.data(), GL_STATIC_DRAW );
 	// Create another Position Buffer that is null, for ping-ponging
-	mPositions[mDestinationIndex] = ci::gl::Vbo::create( GL_ARRAY_BUFFER, positions.size() * sizeof(vec3), nullptr, GL_STATIC_DRAW );
+	mPositions[mDestinationIndex] = ci::gl::Vbo::create( GL_ARRAY_BUFFER, positions.size() * sizeof(vec4), nullptr, GL_STATIC_DRAW );
 	
 	mVelocities[mSourceIndex] = ci::gl::Vbo::create( GL_ARRAY_BUFFER, velocities.size() * sizeof(vec3), velocities.data(), GL_STATIC_DRAW );
 	mVelocities[mDestinationIndex] = ci::gl::Vbo::create( GL_ARRAY_BUFFER, velocities.size() * sizeof(vec3), nullptr, GL_STATIC_DRAW );
@@ -215,7 +220,7 @@ void IndexTransformFeedbackApp::initBuffers()
 		
 		{
 		 gl::ScopedBuffer sccopeBuffer( mLineIndices[i] );
-		 ci::gl::vertexAttribPointer( LINE_INDEX, 1, GL_INT, GL_FALSE, 0,  (const GLvoid*) 0 );
+		 ci::gl::vertexAttribIPointer( LINE_INDEX, 1, GL_UNSIGNED_INT, 0, 0 );
 		 ci::gl::enableVertexAttribArray( LINE_INDEX );
 		}
 	}
@@ -264,11 +269,12 @@ void IndexTransformFeedbackApp::update()
 		gl::ScopedVao		vaoScope( mLineVao[mSourceIndex] );
 //		gl::ScopedBuffer	vboScope( mLineIndices[mSourceIndex] );
 		
+		// bind texture here
+		
 		gl::bindBufferBase( GL_TRANSFORM_FEEDBACK_BUFFER, 0, mLineIndices[mDestinationIndex] );
 		
 		gl::beginTransformFeedback( GL_POINTS );
 		gl::drawArrays( GL_POINTS, 0, POINT_NUM * POINT_NUM );
-		
 		gl::endTransformFeedback();
 	}
 	

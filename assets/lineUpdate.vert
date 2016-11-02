@@ -1,6 +1,6 @@
 #version 330 core
 
-layout (location = 0) in int vIndex;
+layout (location = 0) in uint vIndex;
 
 uniform int uParticleCount;
 uniform int uStride;		// 16
@@ -21,30 +21,31 @@ void main(void)
 	int matchIndex = -1;
 	int id = int(floor(float(vIndex) / float(uStride)));
 	bool even = mod(id, 2) == 0;
-	
-	if( even ){
-		matchIndex = id;
-	}else{
-	
-		int pointIndex = vIndex % uStride;
-		vec3 myPos = texelFetch( tex_position, id ).xyz;
+	/*
+	if( vIndex > 0 ){
+		if( even ){
+			matchIndex = id;
+		}else{
 		
-		int rangeCounter = 0;
-		for( int i = 0; i < uParticleCount; i++){
-			vec3 comparitorPos = texelFetch( tex_position, i ).xyz;
-			float dist = distance( myPos, comparitorPos);
+			int pointIndex = vIndex % uStride;
+			vec3 myPos = texelFetch( tex_position, id ).xyz;
 			
-			if( dist < uMaxDist ) {
-				rangeCounter++;
-			}
-			
-			if( rangeCounter == pointIndex ){
-				matchIndex = i;
-				break;
+			int rangeCounter = 0;
+			for( int i = 0; i < uParticleCount; i++){
+				vec3 comparitorPos = texelFetch( tex_position, i ).xyz;
+				float dist = distance( myPos, comparitorPos);
+				
+				if( dist < uMaxDist ) {
+					rangeCounter++;
+				}
+				
+				if( rangeCounter == pointIndex ){
+					matchIndex = i;
+					break;
+				}
 			}
 		}
-	}
-	
+	}*/
 	
 	// correct output
 //	tf_index = matchIndex;
